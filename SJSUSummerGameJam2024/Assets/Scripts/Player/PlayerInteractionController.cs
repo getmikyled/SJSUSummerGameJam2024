@@ -9,31 +9,10 @@ using UnityEngine;
 public partial class PlayerCharacterController
 {
     [Header("Interaction")] 
+    [SerializeField] private float interactionCooldownDuration = 0.25f;
     [SerializeField] private KeyCode interactionKey = KeyCode.Space;
-    
-    private HashSet<InteractableObject> nearbyInteractableObjects = new HashSet<InteractableObject>();
 
-    ///-/////////////////////////////////////////////////////////////////////////////////////////////////
-    /// 
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        InteractableObject interactableObject = other.GetComponent<InteractableObject>();
-        if (interactableObject != null)
-        {
-            nearbyInteractableObjects.Add(interactableObject);
-        }
-    }
-    
-    ///-/////////////////////////////////////////////////////////////////////////////////////////////////
-    /// 
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        InteractableObject interactableObject = other.GetComponent<InteractableObject>();
-        if (interactableObject != null)
-        {
-            nearbyInteractableObjects.Remove(interactableObject);
-        }
-    }
+    private bool interactionCoolDownActive = false;
 
     ///-/////////////////////////////////////////////////////////////////////////////////////////////////
     /// 
@@ -53,31 +32,44 @@ public partial class PlayerCharacterController
     /// 
     private bool CanInteract()
     {
-        return playerState != PlayerState.Hiding;
+        return interactionCoolDownActive == false && playerState != PlayerState.Hiding;
     }
 
     ///-/////////////////////////////////////////////////////////////////////////////////////////////////
     /// 
     private InteractableObject GetClosestInteractableObject()
     {
+        Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, 1f);
+        
         // Track the closest interactable object
         InteractableObject closestInteractableObject = null;
         float closestDistance = Mathf.Infinity;
         
         // Iterate through nearby interactables
-        foreach (InteractableObject interactableObject in nearbyInteractableObjects)
+        foreach (Collider2D collider in nearbyColliders)
         {
-            float distance = Vector2.Distance(interactableObject.transform.position, transform.position);
-
-            // Check if this interactable is closer than the currently tracked one
-            if (distance < closestDistance)
+            InteractableObject interactableObject = collider.GetComponent<InteractableObject>();
+            if (interactableObject != null)
             {
-                // Set new closest interactable object
-                closestDistance = distance;
-                closestInteractableObject = interactableObject;
+                float distance = Vector2.Distance(interactableObject.transform.position, transform.position);
+
+                // Check if this interactable is closer than the currently tracked one
+                if (distance < closestDistance)
+                {
+                    // Set new closest interactable object
+                    closestDistance = distance;
+                    closestInteractableObject = interactableObject;
+                }
             }
         }
 
         return closestInteractableObject;
+    }
+
+    private IEnumerator TriggerInteractionCoolDown()
+    {
+        interactionCoolDownActive = true;
+        yield return new WaitForSeconds(interactionCooldownDuration);
+        interactionCoolDownActive = false;
     }
 }
