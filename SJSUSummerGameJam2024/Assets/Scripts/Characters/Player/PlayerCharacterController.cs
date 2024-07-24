@@ -145,4 +145,11 @@ public partial class PlayerCharacterController : MonoBehaviour
 
         _rigidbody.position += direction * (_speed * Time.deltaTime);
     }
+
+    ///-/////////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    public bool IsHiding()
+    {
+        return playerState == PlayerState.Hiding;
+    }
 }
