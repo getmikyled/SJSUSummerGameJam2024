@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 ///-/////////////////////////////////////////////////////////////////////////////////////////////////
 /// 
@@ -28,6 +30,8 @@ public partial class PlayerCharacterController : MonoBehaviour
     private PlayerState playerState = PlayerState.Default;
     private HidingSpot hidingSpot = null;
 
+    public UnityEvent onDeath = new UnityEvent();
+
     ///-/////////////////////////////////////////////////////////////////////////////////////////////////
     /// 
     private void Awake()
@@ -50,6 +54,17 @@ public partial class PlayerCharacterController : MonoBehaviour
         
         // PlayerInteractionController
         OnUpdateTryInteract();
+    }
+
+    ///-/////////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        Enemy enemy = other.transform.GetComponent<Enemy>();
+        if (enemy != null && IsHiding() == false)
+        {
+            Die();
+        }
     }
 
     ///-/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,5 +166,13 @@ public partial class PlayerCharacterController : MonoBehaviour
     public bool IsHiding()
     {
         return playerState == PlayerState.Hiding;
+    }
+
+    ///-/////////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    private void Die()
+    {
+        _rigidbody.freezeRotation = false;
+        onDeath.Invoke();
     }
 }
